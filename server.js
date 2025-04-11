@@ -1,5 +1,4 @@
-import express from 'express';
-import * as http from 'http';
+const express = require('express');
 require('dotenv').config();
 const crypto = require('crypto');
 
@@ -7,9 +6,6 @@ const cors = require('cors');
 
 const app = express();
 const port = process.env.PORT || 5000;
-
-const server = http.createServer(app);
-
 app.use(cors({
     credentials: true,
     origin: [
@@ -25,17 +21,24 @@ app.use(express.json({
     }
 }))
 
-app.post("callback", (req, res) => {
+
+app.post("/callback", (req, res) => {
     // get header values 
-    const apiKey = req.headers['X-Auth-Key'];
+    console.log(req.headers);
+    const apiKey = req.headers['x-auth-key'];
     if (apiKey !== process.env.API_KEY) {
         console.log("Received invalid API_KEY");
     }
 
-    const signature = req.headers['X-Auth-Token'];
-    const ts = req.headers['X-Auth-Ts'];
+    const signature = req.headers['x-auth-token'];
+    const ts = req.headers['x-auth-ts'];
 
     const body = req.body;
+
+    console.log("apikey: ", apiKey);
+    console.log("signature: ", signature);
+    console.log("ts: ", ts);
+    console.log("body: ", body);
 
     const validRequest = verifySignature(ts, body, signature);
     if (!validRequest) {
@@ -44,10 +47,14 @@ app.post("callback", (req, res) => {
         console.log("Valid requests: ");
         console.log(body);
     }
+
+    res.status(200).send({
+        status: true
+    })
 })
 
-server.listen(port, async () => {
-    "merchant server is running"
+app.listen(port, () => {
+    console.log("merchant server is running")
 })
 
 function verifySignature (ts, body, receivedHmac) {
