@@ -1,16 +1,16 @@
+const { default: axios } = require('axios');
 const express = require('express');
-require('dotenv').config();
 const crypto = require('crypto');
-
 const cors = require('cors');
+const sampleProducts = require('./sample.products');
+
+require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 5000;
 app.use(cors({
     credentials: true,
-    origin: [
-        "http://127.0.0.1:8000" // should be any url
-    ]
+    origin: true,
 }))
 
 app.use(express.urlencoded({limit: '200mb', extended: true}));
@@ -20,6 +20,73 @@ app.use(express.json({
         req.rawBody = buf;
     }
 }))
+
+app.get('/products', (req, res) => {
+    res.status(200).send({
+        status: true,
+        products: sampleProducts
+    })
+})
+
+app.get('/products/:id', (req, res) => {
+    const productId = +req.params.id;
+    const product = sampleProducts.find(sp => sp.id === productId);
+    if (!product) {
+        return res.status(404).send({
+            status: false,
+            msg: 'Product not found'
+        });
+    }
+    res.status(200).send({
+        status: true,
+        product
+    });
+})
+
+app.post('/buy/:productId', async (req, res) => {
+    // get product id 
+    const productId = +req.params['productId'];
+
+    const { tokenName, network }= req.body;
+
+    const product = sampleProducts.find(sp => sp.id == productId)
+    if (!product) {
+        return res.status(404).send({
+            status: false,
+            msg: "Product not found"
+        })
+    }
+
+    // generate order id 
+    const orderID = crypto.randomInt(1000);
+
+    try {
+        // send payment request 
+        const { data } = await axios.post(`${process.env.KRYPTO_API}/api/deposit`, {
+            token_name: tokenName,
+            network: network,
+            amount_in_usd: product.price,
+            order_number: orderID + ""
+        }, {
+            headers: {
+                'X-API-KEY': process.env.API_KEY
+            }
+        })
+
+        if (data.status) {
+            res.status(201).send({
+                status: true,
+                dep_req: data.dep_addr
+            })
+        } else {
+            res.status(400).send({
+
+            })
+        }
+    } catch (error) {
+        console.log(error);
+    }
+})
 
 
 app.post("/callback", (req, res) => {
