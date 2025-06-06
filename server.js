@@ -80,11 +80,16 @@ app.post('/buy/:productId', async (req, res) => {
             })
         } else {
             res.status(400).send({
-
+                status: false,
+                msg: data.msg
             })
         }
     } catch (error) {
         console.log(error);
+        res.status(500).send({
+            status: false,
+            msg: "Internal server error"
+        })
     }
 })
 
