@@ -21,6 +21,13 @@ app.use(express.json({
     }
 }))
 
+app.get('/hc', (req, res) => {
+    res.status(200).send({
+        status: true,
+        msg: 'Server is running'
+    })
+})
+
 app.get('/products', (req, res) => {
     res.status(200).send({
         status: true,
