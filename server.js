@@ -144,6 +144,15 @@ app.post("/callback", (req, res) => {
     } else {
         console.log("Valid requests: ");
         console.log(body);
+        // Update order status using the status from the callback body
+        if (body.order_number && body.status) {
+            const updated = orderService.updateOrderStatus(Number(body.order_number), body.status);
+            if (updated) {
+                console.log(`Order ${body.order_number} status updated to ${body.status}.`);
+            } else {
+                console.log(`Order ${body.order_number} not found.`);
+            }
+        }
     }
 
     res.status(200).send({
