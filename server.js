@@ -3,6 +3,7 @@ const express = require('express');
 const crypto = require('crypto');
 const cors = require('cors');
 const sampleProducts = require('./sample.products');
+const orderService = require('./order.service');
 
 require('dotenv').config();
 
@@ -81,6 +82,18 @@ app.post('/buy/:productId', async (req, res) => {
         })
 
         if (data.status) {
+            // Store the order using the service
+            orderService.addOrder({
+                orderId: orderID,
+                productId: product.id,
+                productName: product.name,
+                amount: product.price,
+                tokenName,
+                network,
+                createdAt: new Date(),
+                dep_req: data.dep_addr
+            });
+
             res.status(201).send({
                 status: true,
                 dep_req: data.dep_addr
@@ -100,6 +113,12 @@ app.post('/buy/:productId', async (req, res) => {
     }
 })
 
+app.get('/orders', (req, res) => {
+    res.status(200).send({
+        status: true,
+        orders: orderService.getOrders()
+    });
+});
 
 app.post("/callback", (req, res) => {
     // get header values 
